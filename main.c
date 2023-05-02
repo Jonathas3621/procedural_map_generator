@@ -11,7 +11,8 @@ int main(int argc, char **argv) {
     }
 
     //Carrega a imagem 1 na memória
-    FILE *file1 = fopen(argv[1], "rb");
+    //FILE *file1 = fopen(argv[1], "rb");
+    FILE *file1 = fopen("im\\2.png", "rb");
     if(!file1) {
         fprintf(stderr, "Erro ao abrir o arquivo %s\n", argv[1]);
         return 1;
@@ -74,6 +75,7 @@ int main(int argc, char **argv) {
 
     //Carrega a imagem 2 na memória
     FILE *file2 = fopen(argv[2], "rb");
+    //FILE *file2 = fopen("im\\1.png", "rb");
     if(!file2) {
         fprintf(stderr, "Erro ao abrir o arquivo %s\n", argv[2]);
         return 1;
@@ -183,6 +185,60 @@ int main(int argc, char **argv) {
         row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr, info_ptr));
     }
 
+    //Copiando as linhas da imagem 1 para a nova imagem
+    for(int y = 0; y < height1; y++) {
+        png_bytep row = row_pointers[y];
+        for(int x = 0; x < width1; x++) {
+            png_bytep px = &(row[x * 4]);
+            px[0] = row_pointers1[y][x * 4];
+            px[1] = row_pointers1[y][x * 4 + 1];
+            px[2] = row_pointers1[y][x * 4 + 2];
+            px[3] = row_pointers1[y][x * 4 + 3];
+        }
+    }
+
+    //Copiando as linhas da imagem 2 para a nova imagem
+    for(int y = 0; y < height2; y++) {
+        png_bytep row = row_pointers[y];
+        for(int x = 0; x < width2; x++) {
+            png_bytep px = &(row[(width1 + x) * 4]);
+            px[0] = row_pointers2[y][x * 4];
+            px[1] = row_pointers2[y][x * 4 + 1];
+            px[2] = row_pointers2[y][x * 4 + 2];
+            px[3] = row_pointers2[y][x * 4 + 3];
+        }
+    }
+
+    //Escreve a nova imagem em um arquivo
+    //FILE *fp = fopen(argv[3], "wb");
+    FILE *fp = fopen("new.png", "wb");
+    if(!fp) {
+        fprintf(stderr, "Erro ao criar o arquivo %s", argv[3]);
+
+        //Libera memória alocada
+        for(int y = 0; y < height1; y++) {
+            free(row_pointers1[y]);
+        }
+        for(int y = 0; y < height2; y++) {
+            free(row_pointers2[y]);
+        }
+        for(int y = 0; y < new_height; y++) {
+            free(row_pointers[y]);
+        }
+
+        free(row_pointers1);
+        free(row_pointers2);
+        free(row_pointers);
+        png_destroy_read_struct(&png_ptr1, &info_ptr1, NULL);
+        png_destroy_read_struct(&png_ptr2, &info_ptr2, NULL);
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+
+        return 1;
+    }
+    png_init_io(png_ptr, fp);
+    png_write_info(png_ptr, info_ptr);
+    png_write_image(png_ptr, row_pointers);
+    png_write_end(png_ptr, NULL);
 
     //Libera memória alocada
     for(int y = 0; y < height1; y++) {
@@ -201,6 +257,9 @@ int main(int argc, char **argv) {
     png_destroy_read_struct(&png_ptr1, &info_ptr1, NULL);
     png_destroy_read_struct(&png_ptr2, &info_ptr2, NULL);
     png_destroy_write_struct(&png_ptr, &info_ptr);
+
+    //Fecha a nova imagem
+    fclose(fp);
 
     printf("All right\n");
 

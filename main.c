@@ -19,7 +19,16 @@ int main(int argc, char **argv) {
 
     //Carrega as informações da imagem 1 em structs da LIBPNG
     png_structp png_ptr1 = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if(!png_ptr1) {
+        fprintf(stderr, "Erro ao criar struct de leitura da imagem.\n");
+        return 1;
+    }
     png_infop info_ptr1 = png_create_info_struct(png_ptr1);
+    if(!info_ptr1) {
+        png_destroy_read_struct(&png_ptr1, NULL, NULL);
+        fprintf(stderr, "Erro ao criar struct de informações da imagem.\n");
+        return 1;
+    }
     png_init_io(png_ptr1, file1);
     png_read_info(png_ptr1, info_ptr1);
 
@@ -72,7 +81,16 @@ int main(int argc, char **argv) {
 
     //Carrega as informações da imagem 2 em structs da LIBPNG
     png_structp png_ptr2 = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if(!png_ptr2) {
+        fprintf(stderr, "Erro ao criar struct de leitura da imagem.\n");
+        return 1;
+    }
     png_infop info_ptr2 = png_create_info_struct(png_ptr2);
+    if(!info_ptr2) {
+        png_destroy_read_struct(&png_ptr2, NULL, NULL);
+        fprintf(stderr, "Erro ao criar struct de informações da imagem.\n");
+        return 1;
+    }
     png_init_io(png_ptr2, file2);
     png_read_info(png_ptr2, info_ptr2);
 

@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     //Fecha imagem 1
     fclose(file1);
 
-    //Carrega o arquivo 2 na memória
+    //Carrega a imagem 2 na memória
     FILE *file2 = fopen(argv[2], "rb");
     if(!file2) {
         fprintf(stderr, "Erro ao abrir o arquivo %s\n", argv[2]);
@@ -134,6 +134,56 @@ int main(int argc, char **argv) {
     //Fecha imagem 2
     fclose(file2);
 
+    //Cria a nova imagem
+    int new_width = width1 + width2;
+    int new_height = height1 > height2 ? height1 : height2;
+    png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if(!png_ptr) {
+        fprintf(stderr, "Erro na criação da estrutura de escrita.");
+
+        for(int y = 0; y < height1; y++) {
+            free(row_pointers1[y]);
+        }
+        for(int y = 0; y < height2; y++) {
+            free(row_pointers2[y]);
+        }
+
+        free(row_pointers1);
+        free(row_pointers2);
+        png_destroy_read_struct(&png_ptr1, &info_ptr1, NULL);
+        png_destroy_read_struct(&png_ptr2, &info_ptr2, NULL);
+
+        return 1;
+    }
+    png_infop info_ptr = png_create_info_struct(png_ptr);
+    if(!info_ptr) {
+        fprintf(stderr, "Erro na criação da estrutura de escrita");
+
+        for(int y = 0; y < height1; y++) {
+            free(row_pointers1[y]);
+        }
+        for(int y = 0; y < height2; y++) {
+            free(row_pointers2[y]);
+        }
+
+        free(row_pointers1);
+        free(row_pointers2);
+        png_destroy_read_struct(&png_ptr1, &info_ptr1, NULL);
+        png_destroy_read_struct(&png_ptr2, &info_ptr2, NULL);
+
+        return 1;
+    }
+    png_byte color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+    png_byte bit_depth = 8;
+    png_set_IHDR(png_ptr, info_ptr, new_width, new_height, bit_depth, color_type, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+    //Criando matriz de pixels
+    png_bytep *row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * new_height);
+    for(int y = 0; y < new_height; y++) {
+        row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr, info_ptr));
+    }
+
+
     //Libera memória alocada
     for(int y = 0; y < height1; y++) {
         free(row_pointers1[y]);
@@ -141,11 +191,16 @@ int main(int argc, char **argv) {
     for(int y = 0; y < height2; y++) {
         free(row_pointers2[y]);
     }
+    for(int y = 0; y < new_height; y++) {
+        free(row_pointers[y]);
+    }
 
     free(row_pointers1);
     free(row_pointers2);
+    free(row_pointers);
     png_destroy_read_struct(&png_ptr1, &info_ptr1, NULL);
     png_destroy_read_struct(&png_ptr2, &info_ptr2, NULL);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
 
     printf("All right\n");
 

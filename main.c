@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 
     //Carrega a imagem 1 na memória
     //FILE *file1 = fopen(argv[1], "rb");
-    FILE *file1 = fopen("im\\2.png", "rb");
+    FILE *file1 = fopen("tiles\\2.png", "rb");
     if(!file1) {
         fprintf(stderr, "Erro ao abrir o arquivo %s\n", argv[1]);
         return 1;
@@ -74,8 +74,8 @@ int main(int argc, char **argv) {
     fclose(file1);
 
     //Carrega a imagem 2 na memória
-    FILE *file2 = fopen(argv[2], "rb");
-    //FILE *file2 = fopen("im\\1.png", "rb");
+    //FILE *file2 = fopen(argv[2], "rb");
+    FILE *file2 = fopen("tiles\\3.png", "rb");
     if(!file2) {
         fprintf(stderr, "Erro ao abrir o arquivo %s\n", argv[2]);
         return 1;
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
         png_set_strip_16(png_ptr2);
     }
     if(color_type2 == PNG_COLOR_TYPE_PALETTE) {
-        png_set_palette_to_rgb(png_ptr1);
+        png_set_palette_to_rgb(png_ptr2);
     }
     if(color_type2 == PNG_COLOR_TYPE_GRAY && bit_depth2 < 8) {
         png_set_expand_gray_1_2_4_to_8(png_ptr2);

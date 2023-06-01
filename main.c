@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <png.h>
 
+
+
 int main(int argc, char **argv) {
 
     //Encerra o programa se a quantidade de argumentos da chamada for diferente de 4

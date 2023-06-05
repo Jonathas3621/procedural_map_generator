@@ -102,6 +102,9 @@ int loadTextures(SDL_Renderer *renderer, SDL_Surface ***image_matrix, SDL_Textur
 }
 
 void drawImage(SDL_Rect dstRect, position pos, int zoom, SDL_Renderer *renderer, SDL_Texture ***texture_matrix) {
+    dstRect.w *= zoom;
+    dstRect.h *= zoom;
+
     for(int i = 0; i < 10; i++) {
         for(int j = 0; j < 10; j++) {
             SDL_RenderCopy(renderer, texture_matrix[i][j], NULL, &dstRect);
@@ -117,16 +120,16 @@ void drawImage(SDL_Rect dstRect, position pos, int zoom, SDL_Renderer *renderer,
 
 void drawMenu(SDL_Renderer* renderer, button* btn, SDL_Rect* menuBar) {
     // Desenhar barra de menu
-    SDL_SetRenderDrawColor(renderer, 52, 58, 64, 255);
+    SDL_SetRenderDrawColor(renderer, 38,38,46, 255);
     SDL_RenderFillRect(renderer, menuBar);
 
     // Desenhar botão de geração de mapa
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 52,52,59, 255);
     SDL_RenderFillRect(renderer, &(btn->boddy));
 }
 
 void clearDisplay(SDL_Renderer* renderer) {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 29,27,34, 255);
     SDL_RenderClear(renderer);
 }
 
@@ -134,8 +137,10 @@ int main(int argc, char** argv) {
 
     int menuWidth =  WINDOW_WIDTH / 4;
     int backWidth = WINDOW_WIDTH - menuWidth;
-    int zoom = 1;
     position pos = {0, 0};
+    int zoom = 1;
+    int btnHeight = 40;
+    int spacing = 30;
 
     //INICIALIZAÇÃO DAS ESTRUTURAS
 
@@ -149,7 +154,7 @@ int main(int argc, char** argv) {
         SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
-        SDL_WINDOW_SHOWN);
+        SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS);
     if(!window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Erro ao criar a janela: %s", SDL_GetError());
         SDL_Quit();
@@ -190,25 +195,46 @@ int main(int argc, char** argv) {
     SDL_Rect menuBar = {WINDOW_WIDTH - menuWidth, 0, menuWidth, WINDOW_HEIGHT};
 
     char label1[] = "Novo Mapa"; 
-    button *genNewMap = createButton(menuBar.x + menuBar.w/4, menuBar.y + 50, menuBar.w/2, 90, label1, NULL);
+    button *genNewMap = createButton(menuBar.x + spacing, menuBar.y + spacing, menuBar.w - 2*spacing, btnHeight, label1, NULL);
+
+    char label2[] = "Sair";
+    button *exit = createButton(menuBar.x + spacing, menuBar.h - (spacing + btnHeight), menuBar.w - 2*spacing, btnHeight, label2, NULL);
+
+    char label3[] = "+";
+    button *zoomIn = createButton(menuBar.x + spacing, menuBar.h - 2*(spacing + btnHeight), (menuBar.w - 3*spacing)/2, btnHeight, label3, NULL);
+
+    char label4[] = "-";
+    button *zoomOut = createButton(WINDOW_WIDTH - (spacing + (menuBar.w - 3*spacing)/2), menuBar.h - 2*(spacing + btnHeight), (menuBar.w - 3*spacing)/2, btnHeight, label4, NULL);
 
     //RENDERIZAÇÃO
 
     // Limpar a tela
     clearDisplay(renderer);
 
-    // Desenhar menu
-    drawMenu(renderer, genNewMap, &menuBar);
+    // Desenhar barra de menu
+    SDL_SetRenderDrawColor(renderer, 38,38,46, 255);
+    SDL_RenderFillRect(renderer, &menuBar);
 
+    // Desenhar botões do menu
+    SDL_SetRenderDrawColor(renderer, 52,52,59, 255);
+    SDL_RenderFillRect(renderer, &(genNewMap->boddy));
+
+    SDL_RenderFillRect(renderer, &(exit->boddy));
+
+    SDL_RenderFillRect(renderer, &(zoomIn->boddy));
+
+    SDL_RenderFillRect(renderer, &(zoomOut->boddy));
+
+    //Atualiza o renderer
     SDL_RenderPresent(renderer);
 
     zoom = backWidth / (10 * IMAGE_SIZE);
     pos.x = (backWidth - (zoom * IMAGE_SIZE * 10)) / 2;
     pos.y = (WINDOW_HEIGHT - (zoom * IMAGE_SIZE * 10)) / 2;
 
-    SDL_Rect dstRect = {pos.x, pos.y, zoom*IMAGE_SIZE, zoom*IMAGE_SIZE};
+    SDL_Rect dstRect = {pos.x, pos.y, IMAGE_SIZE, IMAGE_SIZE};
 
-    //SDL_Rect *dstRect, int zoom, SDL_Render renderer, SDL_Texture*** texture_matrix
+    // Desenha os tiles na tela
     drawImage(dstRect, pos, zoom, renderer, texture_matrix);
 
     // Aguardar evento de saída
@@ -218,14 +244,75 @@ int main(int argc, char** argv) {
             break;
         }
         if(event.type == SDL_MOUSEBUTTONDOWN) {
-            if(isPressed(genNewMap->boddy, event)) 
+            if(isPressed(genNewMap->boddy, event)) {
 
                 clearDisplay(renderer);
-                drawMenu(renderer, genNewMap, &menuBar);
+                // Desenhar barra de menu
+                SDL_SetRenderDrawColor(renderer, 38,38,46, 255);
+                SDL_RenderFillRect(renderer, &menuBar);
+
+                // Desenhar botões do menu
+                SDL_SetRenderDrawColor(renderer, 52,52,59, 255);
+                SDL_RenderFillRect(renderer, &(genNewMap->boddy));
+
+                SDL_RenderFillRect(renderer, &(exit->boddy));
+
+                SDL_RenderFillRect(renderer, &(zoomIn->boddy));
+
+                SDL_RenderFillRect(renderer, &(zoomOut->boddy));
+
                 drawImage(dstRect, pos, zoom, renderer, texture_matrix);
-                //printf("MouseX: %d, MouseY: %d", (int) event.button.x, (int)event.button.y);
+            }
+            if(isPressed(exit->boddy, event)) {
+                break;
+            }
+            if(isPressed(zoomIn->boddy, event)) {
+                zoom += 1;
+
+                clearDisplay(renderer);
+
+                // Desenhar barra de menu
+                SDL_SetRenderDrawColor(renderer, 38,38,46, 255);
+                SDL_RenderFillRect(renderer, &menuBar);
+
+                // Desenhar botões do menu
+                SDL_SetRenderDrawColor(renderer, 52,52,59, 255);
+                SDL_RenderFillRect(renderer, &(genNewMap->boddy));
+
+                SDL_RenderFillRect(renderer, &(exit->boddy));
+
+                SDL_RenderFillRect(renderer, &(zoomIn->boddy));
+
+                SDL_RenderFillRect(renderer, &(zoomOut->boddy));
+
+                drawImage(dstRect, pos, zoom, renderer, texture_matrix);
+            }
+            if(isPressed(zoomOut->boddy, event) && zoom > 1) {
+                zoom -= 1;
+
+                clearDisplay(renderer);
+
+                // Desenhar barra de menu
+                SDL_SetRenderDrawColor(renderer, 38,38,46, 255);
+                SDL_RenderFillRect(renderer, &menuBar);
+
+                // Desenhar botões do menu
+                SDL_SetRenderDrawColor(renderer, 52,52,59, 255);
+                SDL_RenderFillRect(renderer, &(genNewMap->boddy));
+
+                SDL_RenderFillRect(renderer, &(exit->boddy));
+
+                SDL_RenderFillRect(renderer, &(zoomIn->boddy));
+
+                SDL_RenderFillRect(renderer, &(zoomOut->boddy));
+
+                drawImage(dstRect, pos, zoom, renderer, texture_matrix);
+            }
+            
         }
     }
+
+    // LIBERAÇÃO DE MEMÓRIA ALOCADA
 
     freeSdlContentMatrix(image_matrix, texture_matrix, tam, tam);
 

@@ -3,16 +3,14 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
-
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#include <SDL_video.h>
 
 #define IMAGE_SIZE 14
 
-typedef struct position {
+typedef struct {
     int x;
     int y;
-} position;
+} orderedPair;
 
 typedef struct button {
     SDL_Rect boddy;
@@ -61,24 +59,25 @@ void freeSdlDisplay(SDL_Window *window, SDL_Renderer *renderer){
     if(renderer) SDL_DestroyRenderer(renderer);
 }
 
-void freeSdlContentMatrix(SDL_Surface ***image_matrix, SDL_Texture ***texture_matrix, int lines, int columns) {
-    for(int d = 0; d < lines; d++) {
-        for (int b = 0; b < columns; b++) {
+void freeSdlContentMatrix(SDL_Surface ***image_matrix, SDL_Texture ***texture_matrix, orderedPair tilesMatrixDim) {
+    for(int d = 0; d < tilesMatrixDim.y; d++) {
+        for (int b = 0; b < tilesMatrixDim.x; b++) {
             if(image_matrix[d][b]) SDL_FreeSurface(image_matrix[d][b]);
             if(texture_matrix[d][b]) SDL_DestroyTexture(texture_matrix[d][b]);
         }
     }
 }
 
-int loadImages(char *filename, SDL_Surface ***image_matrix, int lines, int columns) {
-    for(int i = 0; i < lines; i++) {
-        for(int j = 0; j < columns; j++) {
+int loadImages(char *filename, SDL_Surface ***image_matrix, orderedPair tilesMatrixDim) {
+    for(int i = 0; i < tilesMatrixDim.y; i++) {
+        for(int j = 0; j < tilesMatrixDim.x; j++) {
             sprintf(filename, "tiles/%d.png", rand()%80 + 1);
             image_matrix[i][j] = IMG_Load(filename);
 
             if(!image_matrix[i][j]) {
+                orderedPair pair = {i,j};
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Falha ao carregar a imagem %s: %s", filename, SDL_GetError());
-                freeSdlContentMatrix(image_matrix, NULL, i, j);
+                freeSdlContentMatrix(image_matrix, NULL, pair);
                 return -1;
             }
         }
@@ -86,14 +85,15 @@ int loadImages(char *filename, SDL_Surface ***image_matrix, int lines, int colum
     return 0;
 }
 
-int loadTextures(SDL_Renderer *renderer, SDL_Surface ***image_matrix, SDL_Texture ***texture_matrix, int lines, int columns) {
-    for(int i = 0; i < lines; i++) {
-        for(int j = 0; j < columns; j++) {
+int loadTextures(SDL_Renderer *renderer, SDL_Surface ***image_matrix, SDL_Texture ***texture_matrix, orderedPair tilesMatrixDim) {
+    for(int i = 0; i < tilesMatrixDim.y; i++) {
+        for(int j = 0; j < tilesMatrixDim.x; j++) {
             texture_matrix[i][j] = SDL_CreateTextureFromSurface(renderer, image_matrix[i][j]);
 
             if(!texture_matrix[i][j]) {
+                orderedPair pair = {i,j};
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Falha ao carregar textura: %s", SDL_GetError());
-                freeSdlContentMatrix(image_matrix, texture_matrix, i, j);
+                freeSdlContentMatrix(image_matrix, texture_matrix, pair);
                 return -1;
             }
         }
@@ -101,12 +101,12 @@ int loadTextures(SDL_Renderer *renderer, SDL_Surface ***image_matrix, SDL_Textur
     return 0;
 }
 
-void drawImage(SDL_Rect dstRect, position pos, int zoom, SDL_Renderer *renderer, SDL_Texture ***texture_matrix) {
+void drawImage(SDL_Rect dstRect, orderedPair pos, orderedPair tilesMatrixDim, int zoom, SDL_Renderer *renderer, SDL_Texture ***texture_matrix) {
     dstRect.w *= zoom;
     dstRect.h *= zoom;
 
-    for(int i = 0; i < 10; i++) {
-        for(int j = 0; j < 10; j++) {
+    for(int i = 0; i < tilesMatrixDim.y; i++) {
+        for(int j = 0; j < tilesMatrixDim.x; j++) {
             SDL_RenderCopy(renderer, texture_matrix[i][j], NULL, &dstRect);
             dstRect.x += IMAGE_SIZE * zoom;
 
@@ -133,14 +133,35 @@ void clearDisplay(SDL_Renderer* renderer) {
     SDL_RenderClear(renderer);
 }
 
+void imageScreenAdjustment(int *zoom, orderedPair tilesMatrixSize, orderedPair screenSizes, int imageSize) {
+    SDL_DisplayMode currentMode;
+    int displayIndex = 0;
+
+    if (SDL_GetCurrentDisplayMode(displayIndex, &currentMode) == 0) {
+        if(((float)tilesMatrixSize.x/(float)tilesMatrixSize.y) > 1) {
+            *zoom = screenSizes.x / (tilesMatrixSize.x * imageSize); 
+        }
+        else {
+            *zoom = screenSizes.y / (tilesMatrixSize.y * imageSize);
+        }
+        return;
+    } else {
+        printf("Erro ao obter a resolução de tela: %s\n", SDL_GetError());
+    }
+    *zoom = 1;
+}
+
 int main(int argc, char** argv) {
 
-    int menuWidth =  WINDOW_WIDTH / 4;
-    int backWidth = WINDOW_WIDTH - menuWidth;
-    position pos = {0, 0};
+    //Tamanho de tela padrão
+    int windowWidth = 1000;
+    int windowHeight = 600;
+
+    // variáveis gerais (Valores padrão)
+    orderedPair pos = {0, 0};
     int zoom = 1;
     int btnHeight = 40;
-    int spacing = 30;
+    int spacing = 40;
 
     //INICIALIZAÇÃO DAS ESTRUTURAS
 
@@ -149,18 +170,30 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    //Criando tela
     SDL_Window* window = SDL_CreateWindow("Gerador Procedural",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        WINDOW_WIDTH,
-        WINDOW_HEIGHT,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS);
+        windowWidth,
+        windowHeight,
+        SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_FULLSCREEN_DESKTOP);
     if(!window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Erro ao criar a janela: %s", SDL_GetError());
         SDL_Quit();
         return -1;
     }
 
+    // Atualizando variáveis de tamanho de tela
+    SDL_DisplayMode currentMode;
+    if (!SDL_GetCurrentDisplayMode(0, &currentMode)) {
+        windowWidth = currentMode.w;
+        windowHeight = currentMode.h;
+    }
+
+    int menuWidth =  windowWidth / 4;
+    int backWidth = windowWidth - menuWidth;
+
+    //Criando Renderizador
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if(!renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Erro ao criar o renderer: %s", SDL_GetError());
@@ -170,29 +203,31 @@ int main(int argc, char** argv) {
     }
 
     //CRIAÇÃO DE RENDERIZÁVEIS
-    int tam = 10;
+    orderedPair tilesMatrixSizes = {15, 10};
+    orderedPair screenSizes = {backWidth, windowHeight};
 
-    SDL_Surface*** image_matrix = malloc(tam * sizeof(SDL_Surface*));
-    for(int c=0; c<tam; c++) image_matrix[c] = malloc(tam * sizeof(SDL_Surface*));
+    SDL_Surface*** image_matrix = malloc(tilesMatrixSizes.y * sizeof(SDL_Surface*));
+    for(int c=0; c<tilesMatrixSizes.y; c++) image_matrix[c] = malloc(tilesMatrixSizes.x * sizeof(SDL_Surface*));
 
-    SDL_Texture*** texture_matrix = malloc(tam * sizeof(SDL_Texture*));
-    for(int c=0; c<tam; c++) texture_matrix[c] = malloc(tam * sizeof(SDL_Texture*));
+    SDL_Texture*** texture_matrix = malloc(tilesMatrixSizes.y * sizeof(SDL_Texture*));
+    for(int c=0; c<tilesMatrixSizes.y; c++) texture_matrix[c] = malloc(tilesMatrixSizes.x * sizeof(SDL_Texture*));
 
     char filename[15];
-
-    if(loadImages(filename, image_matrix, tam, tam)) {
+    if(loadImages(filename, image_matrix, tilesMatrixSizes)) {
         freeSdlDisplay(window, renderer);
         SDL_Quit();
         return -1;
     }
 
-    if(loadTextures(renderer, image_matrix, texture_matrix, tam, tam)) {
+    if(loadTextures(renderer, image_matrix, texture_matrix, tilesMatrixSizes)) {
         freeSdlDisplay(window, renderer);
         SDL_Quit();
         return -1;
     }
 
-    SDL_Rect menuBar = {WINDOW_WIDTH - menuWidth, 0, menuWidth, WINDOW_HEIGHT};
+    SDL_Rect menuBar = {windowWidth - menuWidth, 0, menuWidth, windowHeight};
+
+    btnHeight = windowHeight /20;
 
     char label1[] = "Novo Mapa"; 
     button *genNewMap = createButton(menuBar.x + spacing, menuBar.y + spacing, menuBar.w - 2*spacing, btnHeight, label1, NULL);
@@ -204,7 +239,7 @@ int main(int argc, char** argv) {
     button *zoomIn = createButton(menuBar.x + spacing, menuBar.h - 2*(spacing + btnHeight), (menuBar.w - 3*spacing)/2, btnHeight, label3, NULL);
 
     char label4[] = "-";
-    button *zoomOut = createButton(WINDOW_WIDTH - (spacing + (menuBar.w - 3*spacing)/2), menuBar.h - 2*(spacing + btnHeight), (menuBar.w - 3*spacing)/2, btnHeight, label4, NULL);
+    button *zoomOut = createButton(windowWidth - (spacing + (menuBar.w - 3*spacing)/2), menuBar.h - 2*(spacing + btnHeight), (menuBar.w - 3*spacing)/2, btnHeight, label4, NULL);
 
     //RENDERIZAÇÃO
 
@@ -228,16 +263,19 @@ int main(int argc, char** argv) {
     //Atualiza o renderer
     SDL_RenderPresent(renderer);
 
-    zoom = backWidth / (10 * IMAGE_SIZE);
-    pos.x = (backWidth - (zoom * IMAGE_SIZE * 10)) / 2;
-    pos.y = (WINDOW_HEIGHT - (zoom * IMAGE_SIZE * 10)) / 2;
+    //Ajusta a imagem à tela
+    imageScreenAdjustment(&zoom, tilesMatrixSizes, screenSizes, IMAGE_SIZE);
+
+    //Centraliza a imagem na tela
+    pos.x = (backWidth - (zoom * IMAGE_SIZE * tilesMatrixSizes.x)) / 2;
+    pos.y = (windowHeight - (zoom * IMAGE_SIZE * tilesMatrixSizes.y)) / 2;
 
     SDL_Rect dstRect = {pos.x, pos.y, IMAGE_SIZE, IMAGE_SIZE};
 
     // Desenha os tiles na tela
-    drawImage(dstRect, pos, zoom, renderer, texture_matrix);
+    drawImage(dstRect, pos, tilesMatrixSizes, zoom, renderer, texture_matrix);
 
-    // Aguardar evento de saída
+    // Aguarda evento de saída
     SDL_Event event;
     while (SDL_WaitEvent(&event)) {
         if (event.type == SDL_QUIT) {
@@ -247,11 +285,11 @@ int main(int argc, char** argv) {
             if(isPressed(genNewMap->boddy, event)) {
 
                 clearDisplay(renderer);
-                // Desenhar barra de menu
+                // Desenha barra de menu
                 SDL_SetRenderDrawColor(renderer, 38,38,46, 255);
                 SDL_RenderFillRect(renderer, &menuBar);
 
-                // Desenhar botões do menu
+                // Desenha botões do menu
                 SDL_SetRenderDrawColor(renderer, 52,52,59, 255);
                 SDL_RenderFillRect(renderer, &(genNewMap->boddy));
 
@@ -261,7 +299,7 @@ int main(int argc, char** argv) {
 
                 SDL_RenderFillRect(renderer, &(zoomOut->boddy));
 
-                drawImage(dstRect, pos, zoom, renderer, texture_matrix);
+                drawImage(dstRect, pos, tilesMatrixSizes, zoom,  renderer, texture_matrix);
             }
             if(isPressed(exit->boddy, event)) {
                 break;
@@ -271,11 +309,11 @@ int main(int argc, char** argv) {
 
                 clearDisplay(renderer);
 
-                // Desenhar barra de menu
+                // Desenha barra de menu
                 SDL_SetRenderDrawColor(renderer, 38,38,46, 255);
                 SDL_RenderFillRect(renderer, &menuBar);
 
-                // Desenhar botões do menu
+                // Desenha botões do menu
                 SDL_SetRenderDrawColor(renderer, 52,52,59, 255);
                 SDL_RenderFillRect(renderer, &(genNewMap->boddy));
 
@@ -285,7 +323,14 @@ int main(int argc, char** argv) {
 
                 SDL_RenderFillRect(renderer, &(zoomOut->boddy));
 
-                drawImage(dstRect, pos, zoom, renderer, texture_matrix);
+                // Desenha os tiles
+                pos.x = (backWidth - (zoom * IMAGE_SIZE * tilesMatrixSizes.x)) / 2;
+                pos.y = (windowHeight - (zoom * IMAGE_SIZE * tilesMatrixSizes.y)) / 2;
+
+                dstRect.x = pos.x;
+                dstRect.y = pos.y;
+
+                drawImage(dstRect, pos, tilesMatrixSizes, zoom, renderer, texture_matrix);
             }
             if(isPressed(zoomOut->boddy, event) && zoom > 1) {
                 zoom -= 1;
@@ -306,7 +351,14 @@ int main(int argc, char** argv) {
 
                 SDL_RenderFillRect(renderer, &(zoomOut->boddy));
 
-                drawImage(dstRect, pos, zoom, renderer, texture_matrix);
+                // Desenha os tiles
+                pos.x = (backWidth - (zoom * IMAGE_SIZE * tilesMatrixSizes.x)) / 2;
+                pos.y = (windowHeight - (zoom * IMAGE_SIZE * tilesMatrixSizes.y)) / 2;
+
+                dstRect.x = pos.x;
+                dstRect.y = pos.y;
+
+                drawImage(dstRect, pos, tilesMatrixSizes, zoom, renderer, texture_matrix);
             }
             
         }
@@ -314,12 +366,12 @@ int main(int argc, char** argv) {
 
     // LIBERAÇÃO DE MEMÓRIA ALOCADA
 
-    freeSdlContentMatrix(image_matrix, texture_matrix, tam, tam);
+    freeSdlContentMatrix(image_matrix, texture_matrix, tilesMatrixSizes);
 
-    for(int c=0; c<tam; c++) free(image_matrix[c]);
+    for(int c=0; c<tilesMatrixSizes.y; c++) free(image_matrix[c]);
     free(image_matrix);
 
-    for(int c=0; c<tam; c++) free(texture_matrix[c]);
+    for(int c=0; c<tilesMatrixSizes.y; c++) free(texture_matrix[c]);
     free(texture_matrix);
 
     freeSdlDisplay(window, renderer);

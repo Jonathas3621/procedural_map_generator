@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     }
 
     //CRIAÇÃO DE RENDERIZÁVEIS
-    orderedPair tilesMatrixDim = {20, 20}; //(columns(x)(w), lines(y)(h)) 
+    orderedPair tilesMatrixDim = {65, 50}; //(columns(x)(w), lines(y)(h)) 
     orderedPair screenDim = {backWidth, windowHeight};
 
     SDL_Surface*** image_matrix = malloc(tilesMatrixDim.y * sizeof(SDL_Surface*));

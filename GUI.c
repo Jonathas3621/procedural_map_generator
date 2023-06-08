@@ -1,22 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_video.h>
-
-#define IMAGE_SIZE 14
-
-typedef struct {
-    int x;
-    int y;
-} orderedPair;
-
-typedef struct button {
-    SDL_Rect boddy;
-    SDL_Texture *texture; 
-    char *label;
-} button;
+#include "headers/GUI.h"
 
 button* createButton(int x, int y, int w, int h, char *label, SDL_Texture *texture) {
     
@@ -68,7 +50,9 @@ void freeSdlContentMatrix(SDL_Surface ***image_matrix, SDL_Texture ***texture_ma
     }
 }
 
-int loadImages(char *filename, SDL_Surface ***image_matrix, orderedPair tilesMatrixDim) {
+int loadImages(SDL_Surface ***image_matrix, orderedPair tilesMatrixDim) {
+    char filename[15];
+
     for(int i = 0; i < tilesMatrixDim.y; i++) {
         for(int j = 0; j < tilesMatrixDim.x; j++) {
             sprintf(filename, "tiles/%d.png", rand()%80 + 1);
@@ -111,7 +95,7 @@ void drawImage(SDL_Rect dstRect, orderedPair pos, orderedPair tilesMatrixDim, in
             dstRect.x += IMAGE_SIZE * zoom;
 
             SDL_RenderPresent(renderer);
-            SDL_Delay(15);
+            //SDL_Delay(1);
         }
         dstRect.x = pos.x;
         dstRect.y += IMAGE_SIZE * zoom;
@@ -133,16 +117,16 @@ void clearDisplay(SDL_Renderer* renderer) {
     SDL_RenderClear(renderer);
 }
 
-void imageScreenAdjustment(int *zoom, orderedPair tilesMatrixSize, orderedPair screenSizes, int imageSize) {
+void imageScreenAdjustment(int *zoom, orderedPair tilesMatrixSize, orderedPair screenDim, int imageSize) {
     SDL_DisplayMode currentMode;
     int displayIndex = 0;
 
     if (SDL_GetCurrentDisplayMode(displayIndex, &currentMode) == 0) {
         if(((float)tilesMatrixSize.x/(float)tilesMatrixSize.y) > 1) {
-            *zoom = screenSizes.x / (tilesMatrixSize.x * imageSize); 
+            *zoom = screenDim.x / (tilesMatrixSize.x * imageSize); 
         }
         else {
-            *zoom = screenSizes.y / (tilesMatrixSize.y * imageSize);
+            *zoom = screenDim.y / (tilesMatrixSize.y * imageSize);
         }
         return;
     } else {
@@ -203,23 +187,23 @@ int main(int argc, char** argv) {
     }
 
     //CRIAÇÃO DE RENDERIZÁVEIS
-    orderedPair tilesMatrixSizes = {15, 10};
-    orderedPair screenSizes = {backWidth, windowHeight};
+    orderedPair tilesMatrixDim = {20, 20}; //(columns(x)(w), lines(y)(h)) 
+    orderedPair screenDim = {backWidth, windowHeight};
 
-    SDL_Surface*** image_matrix = malloc(tilesMatrixSizes.y * sizeof(SDL_Surface*));
-    for(int c=0; c<tilesMatrixSizes.y; c++) image_matrix[c] = malloc(tilesMatrixSizes.x * sizeof(SDL_Surface*));
+    SDL_Surface*** image_matrix = malloc(tilesMatrixDim.y * sizeof(SDL_Surface*));
+    for(int c=0; c<tilesMatrixDim.y; c++) image_matrix[c] = malloc(tilesMatrixDim.x * sizeof(SDL_Surface*));
 
-    SDL_Texture*** texture_matrix = malloc(tilesMatrixSizes.y * sizeof(SDL_Texture*));
-    for(int c=0; c<tilesMatrixSizes.y; c++) texture_matrix[c] = malloc(tilesMatrixSizes.x * sizeof(SDL_Texture*));
+    SDL_Texture*** texture_matrix = malloc(tilesMatrixDim.y * sizeof(SDL_Texture*));
+    for(int c=0; c<tilesMatrixDim.y; c++) texture_matrix[c] = malloc(tilesMatrixDim.x * sizeof(SDL_Texture*));
 
     char filename[15];
-    if(loadImages(filename, image_matrix, tilesMatrixSizes)) {
+    if(loadImages(image_matrix, tilesMatrixDim)) {
         freeSdlDisplay(window, renderer);
         SDL_Quit();
         return -1;
     }
 
-    if(loadTextures(renderer, image_matrix, texture_matrix, tilesMatrixSizes)) {
+    if(loadTextures(renderer, image_matrix, texture_matrix, tilesMatrixDim)) {
         freeSdlDisplay(window, renderer);
         SDL_Quit();
         return -1;
@@ -264,16 +248,16 @@ int main(int argc, char** argv) {
     SDL_RenderPresent(renderer);
 
     //Ajusta a imagem à tela
-    imageScreenAdjustment(&zoom, tilesMatrixSizes, screenSizes, IMAGE_SIZE);
+    imageScreenAdjustment(&zoom, tilesMatrixDim, screenDim, IMAGE_SIZE);
 
     //Centraliza a imagem na tela
-    pos.x = (backWidth - (zoom * IMAGE_SIZE * tilesMatrixSizes.x)) / 2;
-    pos.y = (windowHeight - (zoom * IMAGE_SIZE * tilesMatrixSizes.y)) / 2;
+    pos.x = (backWidth - (zoom * IMAGE_SIZE * tilesMatrixDim.x)) / 2;
+    pos.y = (windowHeight - (zoom * IMAGE_SIZE * tilesMatrixDim.y)) / 2;
 
     SDL_Rect dstRect = {pos.x, pos.y, IMAGE_SIZE, IMAGE_SIZE};
 
     // Desenha os tiles na tela
-    drawImage(dstRect, pos, tilesMatrixSizes, zoom, renderer, texture_matrix);
+    drawImage(dstRect, pos, tilesMatrixDim, zoom, renderer, texture_matrix);
 
     // Aguarda evento de saída
     SDL_Event event;
@@ -299,12 +283,12 @@ int main(int argc, char** argv) {
 
                 SDL_RenderFillRect(renderer, &(zoomOut->boddy));
 
-                drawImage(dstRect, pos, tilesMatrixSizes, zoom,  renderer, texture_matrix);
+                drawImage(dstRect, pos, tilesMatrixDim, zoom,  renderer, texture_matrix);
             }
             if(isPressed(exit->boddy, event)) {
                 break;
             }
-            if(isPressed(zoomIn->boddy, event)) {
+            if(isPressed(zoomIn->boddy, event) && ((zoom+1) * IMAGE_SIZE * tilesMatrixDim.x) < backWidth && ((zoom+1) * IMAGE_SIZE * tilesMatrixDim.y) < windowHeight) {
                 zoom += 1;
 
                 clearDisplay(renderer);
@@ -324,13 +308,13 @@ int main(int argc, char** argv) {
                 SDL_RenderFillRect(renderer, &(zoomOut->boddy));
 
                 // Desenha os tiles
-                pos.x = (backWidth - (zoom * IMAGE_SIZE * tilesMatrixSizes.x)) / 2;
-                pos.y = (windowHeight - (zoom * IMAGE_SIZE * tilesMatrixSizes.y)) / 2;
+                pos.x = (backWidth - (zoom * IMAGE_SIZE * tilesMatrixDim.x)) / 2;
+                pos.y = (windowHeight - (zoom * IMAGE_SIZE * tilesMatrixDim.y)) / 2;
 
                 dstRect.x = pos.x;
                 dstRect.y = pos.y;
 
-                drawImage(dstRect, pos, tilesMatrixSizes, zoom, renderer, texture_matrix);
+                drawImage(dstRect, pos, tilesMatrixDim, zoom, renderer, texture_matrix);
             }
             if(isPressed(zoomOut->boddy, event) && zoom > 1) {
                 zoom -= 1;
@@ -352,13 +336,13 @@ int main(int argc, char** argv) {
                 SDL_RenderFillRect(renderer, &(zoomOut->boddy));
 
                 // Desenha os tiles
-                pos.x = (backWidth - (zoom * IMAGE_SIZE * tilesMatrixSizes.x)) / 2;
-                pos.y = (windowHeight - (zoom * IMAGE_SIZE * tilesMatrixSizes.y)) / 2;
+                pos.x = (backWidth - (zoom * IMAGE_SIZE * tilesMatrixDim.x)) / 2;
+                pos.y = (windowHeight - (zoom * IMAGE_SIZE * tilesMatrixDim.y)) / 2;
 
                 dstRect.x = pos.x;
                 dstRect.y = pos.y;
 
-                drawImage(dstRect, pos, tilesMatrixSizes, zoom, renderer, texture_matrix);
+                drawImage(dstRect, pos, tilesMatrixDim, zoom, renderer, texture_matrix);
             }
             
         }
@@ -366,12 +350,12 @@ int main(int argc, char** argv) {
 
     // LIBERAÇÃO DE MEMÓRIA ALOCADA
 
-    freeSdlContentMatrix(image_matrix, texture_matrix, tilesMatrixSizes);
+    freeSdlContentMatrix(image_matrix, texture_matrix, tilesMatrixDim);
 
-    for(int c=0; c<tilesMatrixSizes.y; c++) free(image_matrix[c]);
+    for(int c=0; c<tilesMatrixDim.y; c++) free(image_matrix[c]);
     free(image_matrix);
 
-    for(int c=0; c<tilesMatrixSizes.y; c++) free(texture_matrix[c]);
+    for(int c=0; c<tilesMatrixDim.y; c++) free(texture_matrix[c]);
     free(texture_matrix);
 
     freeSdlDisplay(window, renderer);

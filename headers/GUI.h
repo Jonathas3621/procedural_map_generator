@@ -1,18 +1,29 @@
-#include <stdlib.h>
-#include <stdio.h>
+#ifndef STDLIB
+#define STDLIB
+    #include <stdlib.h>
+#endif
 
-#include <SDL.h>
-#include <SDL_image.h>
+#ifndef SDL_GENERAL
+#define SDL_GENERAL
+
+    #include <SDL.h>
+    #include <SDL_image.h>
+
+#endif
+
+#ifndef STDIO
+#define STDIO
+    #include <stdio.h>
+#endif
+
+#ifndef UTILS
+#define UTILS
+    #include "utils.h"
+#endif
+
 #include <SDL_video.h>
 
 #define IMAGE_SIZE 14
-
-// Estrutura criada para utilização em matrizes. Pode representar
-// posições, dimensões, vetores, etc.
-typedef struct {
-    int x;
-    int y;
-} orderedPair;
 
 // Estrutura usada para abstrair objetos clicáveis
 typedef struct button {
@@ -53,3 +64,7 @@ void clearDisplay(SDL_Renderer* renderer);
 
 // Ajusta o zoom de modo que a imagem não ultrapasse nenhuma das margens
 void imageScreenAdjustment(int *zoom, orderedPair tilesMatrixSize, orderedPair screenDim, int imageSize);
+
+orderedPair takeFirstPosition(orderedPair displayArea, int zoom);
+
+int printTexture(SDL_Texture *texture, SDL_Renderer *renderer, orderedPair firstPosition, int zoom, orderedPair position);

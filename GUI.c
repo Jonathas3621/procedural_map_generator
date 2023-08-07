@@ -133,3 +133,29 @@ void imageScreenAdjustment(int *zoom, orderedPair tilesMatrixSize, orderedPair s
         *zoom = proport > 0 ? proport : 1;
     }
 }
+
+orderedPair takeFirstPosition(orderedPair displayArea, int zoom) {
+
+    if(10 * 14 * zoom > displayArea.x || 10 * 14 * zoom > displayArea.y) zoom = 1;
+
+    int remainingSpaceCol = displayArea.y - 10 * 14 * zoom;
+    int remainingSpaceLin = displayArea.x - 10 * 14 * zoom;
+
+    orderedPair firstPosition = {remainingSpaceLin/2, remainingSpaceCol/2};
+
+    return firstPosition;
+}
+
+
+int printTexture(SDL_Texture *texture, SDL_Renderer *renderer, orderedPair firstPosition, int zoom, orderedPair position) {
+
+    if(!texture) return 1;
+    int scale = 14 * zoom;
+
+    SDL_Rect dstRect = {firstPosition.y + scale * position.y, firstPosition.x + scale * position.x, IMAGE_SIZE*zoom, IMAGE_SIZE*zoom};
+
+    SDL_RenderCopy(renderer, texture, NULL, &dstRect);
+    SDL_RenderPresent(renderer);
+    
+    return 0;
+}

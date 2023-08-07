@@ -244,6 +244,7 @@ int main(int argc, char** argv) {
     // Array de tiles
     tile **matrixTile = malloc(11*sizeof(tile));
 
+    // Criação dos tiles a serem utilizados
     matrixTile[0] = createTile(1, leafAndBottom, leafAndRight, leafAndTop, leafAndLeft, tile01, renderer);
     matrixTile[1] = createTile(38, leafAndBottom1, leafAndRight1, topCornerLeft, leftCornerTop, tile38, renderer);
     matrixTile[2] = createTile(39, leafAndBottom2, rightCornerTop, topMid, leftCornerTop1, tile39, renderer);

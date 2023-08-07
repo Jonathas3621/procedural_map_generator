@@ -45,6 +45,12 @@ typedef struct cell{
     tile *tl;
 }cell;
 
+// Estrutura que armazena uma matriz de células e suas dimensões
+typedef struct cellGrid{
+    orderedPair dim;
+    cell ***cellMatrix;
+}cellGrid;
+
 // Construtor para a struct tile
 tile *createTile(int id, Node *t, Node *l, Node *b, Node *r, char *imgPath, SDL_Renderer *renderer);
 
@@ -57,6 +63,15 @@ cell *createCell();
 // Libera memória alocada para uma struct cell
 void freeCell(cell *n);
 
+// Construtor do grid de células
+cellGrid *createCellGrid(orderedPair dim);
+
+// Desaloca todos as células de um grid
+void cleanCellGrid(cellGrid *grid);
+
+// Libera a memória que foi alocada para uma struct cellGrid
+void freeCellGrid(cellGrid *grid);
+
 // Quando o algoritmo adiciona um novo tile à matriz, a função atualiza 
 // os tiles possíveis (entropia) nos cells ao redor
 void updateEntropy(cell ***cellMatrix, int w, int h, int x, int y);
@@ -67,3 +82,6 @@ orderedPair* findLowestEntropy(cell ***cellMatrix, int w, int h);
 
 // Colapsa o cell para a entropia mínima e atribui um tile possível para o cell
 int collapseCell(cell ***cellMatrix, tile **matrixTile, orderedPair pos);
+
+// Procura um tile pelo Id em uma matriz
+tile* findTileById(tile **matrixTile, int id);

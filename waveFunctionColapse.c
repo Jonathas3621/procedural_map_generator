@@ -34,13 +34,6 @@ tile *createTile(int id, Node *t, Node *l, Node *b, Node *r, char *imgPath, SDL_
     return temp;
 }
 
-tile* findTileById(tile **matrixTile, int id) {
-    for(int i = 0; i < 11; i++) {
-        if(matrixTile[i]->id == id) return matrixTile[i];
-    }
-    return NULL;
-}
-
 void freeTile(tile *t) {
     if(!t) return;
     SDL_DestroyTexture(t->tex);
@@ -79,6 +72,84 @@ void freeCell(cell *n) {
     //freeTile(n->tl);
     clearList(&(n->possibilities));
     free(n);
+}
+
+cellGrid *createCellGrid(orderedPair dim) {
+
+    int c, i;
+
+    // Aloca memória para um grid de células
+    cellGrid *grid = malloc(sizeof(cellGrid));
+    if(!grid) return NULL;
+
+    // Aloca memória para uma matriz de células
+    cell*** cellMatrix = malloc(dim.x*sizeof(cell*));
+    if(!cellMatrix) return NULL;
+
+    for(c = 0; c < dim.x; c++) {
+        cellMatrix[c] = malloc(dim.y*sizeof(cell*));
+
+        if(!cellMatrix) {
+            for(i = 0; i < c; i++) free(cellMatrix[i]);
+            free(cellMatrix);
+            return NULL;
+        }
+    }
+
+    // Preenche os campos do grid de células
+    grid->cellMatrix = cellMatrix;
+    grid->dim = dim;
+
+    // Para fins de segurança, os elementos da matriz são inicializados com NULL
+    for(c = 0; c < dim.x; c++) {
+        for(i = 0; i < dim.y; i++) {
+            cellMatrix[c][i] = NULL;
+        }
+    }
+
+    // Cria células e as adiciona no grid
+    for(c = 0; c < dim.x; c++) {
+        for(i = 0; i < dim.y; i++) {
+
+            cellMatrix[c][i] = createCell();
+
+            if(!cellMatrix[c][i]) {
+                freeCellGrid(grid);
+                return NULL;
+            }
+        }
+    }
+
+    return grid;
+}
+
+void cleanCellGrid(cellGrid *grid) {
+
+    if(!grid) return;
+
+    cell ***cellMatrix = grid->cellMatrix;
+    orderedPair dim = grid->dim;
+
+    for(int c = 0; c < dim.x; c++) {
+        for(int i = 0; i < dim.y; i++) {
+            freeCell(cellMatrix[c][i]);
+            cellMatrix[c][i] = NULL;
+        }
+    }
+}
+
+void freeCellGrid(cellGrid *grid) {
+
+    if(!grid) return;
+
+    cleanCellGrid(grid);
+    orderedPair dim = grid->dim;
+    cell ***cellMatrix = grid->cellMatrix;
+
+    for(int c = 0; c < dim.x; c++) {
+        if(cellMatrix) free(cellMatrix[c]);
+    }
+    free(cellMatrix);
 }
 
 void updateEntropy(cell ***cellMatrix, int w, int h, int x, int y) {
@@ -182,6 +253,13 @@ orderedPair* findLowestEntropy(cell ***cellMatrix, int w, int h) {
 
     if(!flag) return NULL;
     return posi;
+}
+
+tile* findTileById(tile **matrixTile, int id) {
+    for(int i = 0; i < 11; i++) {
+        if(matrixTile[i]->id == id) return matrixTile[i];
+    }
+    return NULL;
 }
 
 int collapseCell(cell ***cellMatrix, tile **matrixTile, orderedPair pos) {

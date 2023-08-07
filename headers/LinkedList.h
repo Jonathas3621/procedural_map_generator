@@ -17,7 +17,7 @@ Node *createNewNode(int value);
 
 void freeNode(Node *node);
 
-Node *getNode(Node *head, int index);
+Node *getNodeByIndex(Node *head, int index);
 
 Node *getRandNode(Node* head, int dim);
 

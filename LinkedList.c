@@ -19,7 +19,7 @@ void insertAtHead(Node **head, Node *nodeToInsert){
     *head = nodeToInsert;
 }
 
-Node *getNodeById(Node *head, int index) {
+Node *getNodeByIndex(Node *head, int index) {
     Node *temp = head;
 
     for(int c=0; temp; c++) {
@@ -33,7 +33,7 @@ Node *getNodeById(Node *head, int index) {
 Node *getRandNode(Node* head, int dim) {
 
     int index = rand() % dim;
-    Node *node = getNodeById(head, index);
+    Node *node = getNodeByIndex(head, index);
 
     return node;
 }

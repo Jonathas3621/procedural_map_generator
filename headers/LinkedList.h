@@ -30,3 +30,5 @@ Node* searchNode(Node* lista, int value);
 void printList(Node* list);
 
 void clearList(Node **list);
+
+int getSize(Node *list);

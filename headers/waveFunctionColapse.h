@@ -49,6 +49,7 @@ typedef struct cell{
 typedef struct cellGrid{
     orderedPair dim;
     cell ***cellMatrix;
+    tile **tileList;
 }cellGrid;
 
 // Construtor para a struct tile
@@ -64,7 +65,7 @@ cell *createCell();
 void freeCell(cell *n);
 
 // Construtor do grid de células
-cellGrid *createCellGrid(orderedPair dim);
+cellGrid *createCellGrid(tile **tileList, orderedPair dim);
 
 // Desaloca todos as células de um grid
 void cleanCellGrid(cellGrid *grid);
@@ -74,14 +75,17 @@ void freeCellGrid(cellGrid *grid);
 
 // Quando o algoritmo adiciona um novo tile à matriz, a função atualiza 
 // os tiles possíveis (entropia) nos cells ao redor
-void updateEntropy(cell ***cellMatrix, int w, int h, int x, int y);
+void updateEntropy(cellGrid *grid, orderedPair pos);
 
 // Encontra a menor entropia em uma matriz e retorna a posição de um dos
 // cells com esta entropia
-orderedPair* findLowestEntropy(cell ***cellMatrix, int w, int h);
+orderedPair findLowestEntropy(cellGrid *grid);
 
 // Colapsa o cell para a entropia mínima e atribui um tile possível para o cell
-int collapseCell(cell ***cellMatrix, tile **matrixTile, orderedPair pos);
+int collapseCell(cellGrid *grid, orderedPair pos);
 
 // Procura um tile pelo Id em uma matriz
 tile* findTileById(tile **matrixTile, int id);
+
+// Um ciclo do algoritmo WFC
+orderedPair WFC_Cycle(cellGrid *grid, orderedPair displayDim, int zoom);

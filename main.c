@@ -4,12 +4,11 @@
 int main(int argc, char** argv) {
 
     //Tamanho de tela padrão
-    int windowWidth = 1000;
-    int windowHeight = 600;
+    orderedPair windowDim = {600, 1000};
 
     //Dimensões de estruturas da tela
-    int menuWidth =  windowWidth / 4;
-    int backWidth = windowWidth - menuWidth;
+    orderedPair menuDim = {windowDim.x, windowDim.y / 4};
+    orderedPair displayDim = {windowDim.x, windowDim.y - menuDim.y};
     int btnHeight = 40;
     int spacing = 40;
 
@@ -29,8 +28,8 @@ int main(int argc, char** argv) {
     SDL_Window* window = SDL_CreateWindow("Gerador Procedural",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        windowWidth,
-        windowHeight,
+        windowDim.y,
+        windowDim.x,
         SDL_WINDOW_SHOWN);
     if(!window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Erro ao criar a janela: %s", SDL_GetError());
@@ -48,9 +47,9 @@ int main(int argc, char** argv) {
     }
 
     //CRIAÇÃO DE RENDERIZÁVEIS
-    SDL_Rect menuBar = {windowWidth - menuWidth, 0, menuWidth, windowHeight};
+    SDL_Rect menuBar = {windowDim.y - menuDim.y, 0, menuDim.y, menuDim.x};
 
-    btnHeight = windowHeight /20;
+    btnHeight = windowDim.y /20;
 
     //Botão para ativar nova geração
     char label1[] = "Novo Mapa"; 
@@ -66,7 +65,7 @@ int main(int argc, char** argv) {
 
     //Botão zoom out
     char label4[] = "-";
-    button *zoomOut = createButton(windowWidth - (spacing + (menuBar.w - 3*spacing)/2), menuBar.h - 2*(spacing + btnHeight), (menuBar.w - 3*spacing)/2, btnHeight, label4, NULL);
+    button *zoomOut = createButton(windowDim.y - (spacing + (menuBar.w - 3*spacing)/2), menuBar.h - 2*(spacing + btnHeight), (menuBar.w - 3*spacing)/2, btnHeight, label4, NULL);
 
     // DECLARAÇÃO DOS TILES
 
@@ -258,17 +257,8 @@ int main(int argc, char** argv) {
     matrixTile[10] = createTile(65, bottomMid2, rightMid2, topCornerRight2, leftCornerBottom2, tile65, renderer);
 
     // WFC configuração
-    cell*** matrixCell = malloc(10*sizeof(cell*));
-    for(int c = 0; c < 10; c++) matrixCell[c] = malloc(10*sizeof(cell*));
-
-    for(int c = 0; c < 10; c++) {
-        for(int i = 0; i < 10; i++) {
-            matrixCell[c][i] = createCell();
-            if(!matrixCell[c][i]) {
-                fprintf(stderr, "Erro ao alocar celula na posicao [%d][%d].\n", c, i);
-            }
-        }
-    }
+    orderedPair dim = {10, 10};
+    cellGrid *grid = createCellGrid(matrixTile, dim);
 
     //RENDERIZAÇÃO
 
@@ -291,22 +281,21 @@ int main(int argc, char** argv) {
 
     //Atualiza o renderer
     SDL_RenderPresent(renderer);
-/*
-    for(int c = 0; c < 10; c++) {
-        for(int i = 0; i < 10; i++) {
-            
-            orderedPair position = {c, i};
-            orderedPair origin = {50, 50};
-           (matrixCell[c][i])->tl = matrixTile[c];
-            if(printTexture((matrixCell[c][i])->tl->tex,
-                renderer, origin, zoom, position)) {
-                printf("Não há textura em: [%d][%d];", c, i);
-            }
-        }
-    }*/
+    
+    // Variáveis de display
+    orderedPair blockDim = {14*grid->dim.x*zoom, 14*grid->dim.y*zoom};
+    orderedPair firstPosition = centeringBlock(blockDim, displayDim);
 
     //WFC em ação
-    orderedPair* lowestEntropyPosition;
+    while(1) {
+
+        orderedPair collapsedCellPos = WFC_Cycle(grid, displayDim, zoom);
+        if(collapsedCellPos.x == -1) break;
+
+        cell *collapsedCell = grid->cellMatrix[collapsedCellPos.x][collapsedCellPos.y];
+        printTexture(collapsedCell->tl->tex, renderer, firstPosition, zoom, collapsedCellPos);
+    }
+/*    orderedPair* lowestEntropyPosition;
     orderedPair back = {windowHeight, backWidth};
     orderedPair firstPosition = takeFirstPosition(back, zoom);
     while(1) {
@@ -328,9 +317,9 @@ int main(int argc, char** argv) {
                     renderer, firstPosition, zoom, *lowestEntropyPosition);
         SDL_Delay(5);
     }
- 
-    free(lowestEntropyPosition);
 
+    free(lowestEntropyPosition);
+*/
     //Ajusta a imagem à tela
     //imageScreenAdjustment(&zoom, tilesMatrixDim, screenDim, IMAGE_SIZE);
 
@@ -349,7 +338,7 @@ int main(int argc, char** argv) {
         if (event.type == SDL_QUIT) {
             break;
         }
-        if(event.type == SDL_MOUSEBUTTONDOWN) {
+        if(event.type == SDL_MOUSEBUTTONDOWN) {/*
             if(isPressed(genNewMap->boddy, event)) {
 
                 clearDisplay(renderer);
@@ -367,43 +356,7 @@ int main(int argc, char** argv) {
 
                 SDL_RenderFillRect(renderer, &(zoomOut->boddy));
 
-                for(int c = 0; c < 10; c++) {
-                    for(int i = 0; i < 10; i++) {
-                        freeCell(matrixCell[c][i]);
-                    }
-                }
-
-                for(int c = 0; c < 10; c++) {
-                    for(int i = 0; i < 10; i++) {
-                        matrixCell[c][i] = createCell();
-                    }
-                }
-                orderedPair* lowestEntropyPosition;
-                orderedPair back = {windowHeight, backWidth};
-                orderedPair firstPosition = takeFirstPosition(back, zoom);
-                while(1) {
-                    lowestEntropyPosition = findLowestEntropy(matrixCell, 10, 10);
-                    if(!lowestEntropyPosition) break;
-                    printf("Encontrou menor entropia x: %d, y: %d\n", lowestEntropyPosition->x, lowestEntropyPosition->y);
-
-                    //printf("[%d][%d] -", lowestEntropyPosition->x, lowestEntropyPosition->y);
-                    cell* cel = matrixCell[lowestEntropyPosition->x][lowestEntropyPosition->y];
-                    Node* til = cel->possibilities;
-                    //printList(til);
-                    //printf("Entropia: %d", cel->entropy);
-                    //printf("]\n");
-
-                    if(collapseCell(matrixCell, matrixTile, *lowestEntropyPosition)) break;
-                    updateEntropy(matrixCell, 10, 10, lowestEntropyPosition->x, lowestEntropyPosition->y);
-
-                    printTexture((matrixCell[lowestEntropyPosition->x][lowestEntropyPosition->y])->tl->tex,
-                    renderer, firstPosition, zoom, *lowestEntropyPosition);
-                    SDL_Delay(50);
-                }
-
-                free(lowestEntropyPosition);
-                //drawImage(dstRect, pos, tilesMatrixDim, zoom,  renderer, texture_matrix);
-            }
+            }*/
             if(isPressed(exit->boddy, event)) {
                 break;
             }/*
@@ -470,15 +423,7 @@ int main(int argc, char** argv) {
     //LIBERAÇÃO DE MEMÓRIA ALOCADA
 
     //WFC
-    for(int c = 0; c < 10; c++) {
-        for(int i = 0; i < 10; i++) {
-            freeCell(matrixCell[c][i]);
-        }
-    }
-    for(int c = 0; c < 10; c++) {
-        free(matrixCell[c]);
-    }
-    free(matrixCell);
+    freeCellGrid(grid);
 
     for(int c = 0; c < 10; c++) {
         freeTile(matrixTile[c]);

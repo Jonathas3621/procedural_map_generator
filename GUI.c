@@ -134,18 +134,15 @@ void imageScreenAdjustment(int *zoom, orderedPair tilesMatrixSize, orderedPair s
     }
 }
 
-orderedPair takeFirstPosition(orderedPair displayArea, int zoom) {
+orderedPair centeringBlock(orderedPair dim, orderedPair displayArea) {
 
-    if(10 * 14 * zoom > displayArea.x || 10 * 14 * zoom > displayArea.y) zoom = 1;
-
-    int remainingSpaceCol = displayArea.y - 10 * 14 * zoom;
-    int remainingSpaceLin = displayArea.x - 10 * 14 * zoom;
+    int remainingSpaceCol = displayArea.y - dim.y;
+    int remainingSpaceLin = displayArea.x - dim.x;
 
     orderedPair firstPosition = {remainingSpaceLin/2, remainingSpaceCol/2};
 
     return firstPosition;
 }
-
 
 int printTexture(SDL_Texture *texture, SDL_Renderer *renderer, orderedPair firstPosition, int zoom, orderedPair position) {
 

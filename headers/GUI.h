@@ -65,6 +65,6 @@ void clearDisplay(SDL_Renderer* renderer);
 // Ajusta o zoom de modo que a imagem não ultrapasse nenhuma das margens
 void imageScreenAdjustment(int *zoom, orderedPair tilesMatrixSize, orderedPair screenDim, int imageSize);
 
-orderedPair takeFirstPosition(orderedPair displayArea, int zoom);
+orderedPair centeringBlock(orderedPair dim, orderedPair displayArea);
 
 int printTexture(SDL_Texture *texture, SDL_Renderer *renderer, orderedPair firstPosition, int zoom, orderedPair position);

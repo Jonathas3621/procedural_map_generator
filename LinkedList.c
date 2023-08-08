@@ -93,3 +93,18 @@ void printList(Node* list) {
 void clearList(Node **list) {
     while(*list) delNode(list, *list);
 }
+
+int getSize(Node *list) {
+
+    if(!list) return 0;
+
+    Node* aux = list;
+    int tam = 0;
+
+    while(aux) {
+        aux = aux->next;
+        tam++;
+    }
+
+    return tam;
+}

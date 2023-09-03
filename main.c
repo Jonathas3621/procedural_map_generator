@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
     orderedPair pos = {0, 0};
     int zoom = 3;
 
-    //INICIALIZAÇÃO DAS ESTRUTURAS
+    // SDL
 
     //Inicializando o SDL
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
@@ -260,17 +260,17 @@ int main(int argc, char** argv) {
     orderedPair dim = {10, 10};
     cellGrid *grid = createCellGrid(matrixTile, dim);
 
-    //RENDERIZAÇÃO
+    //RENDERIZAÇÃO INCIAL
 
     // Limpa a tela
     clearDisplay(renderer);
 
     // Desenha barra de menu
-    SDL_SetRenderDrawColor(renderer, 38,38,46, 255);
+    SDL_SetRenderDrawColor(renderer, 38, 38, 46, 255);
     SDL_RenderFillRect(renderer, &menuBar);
 
     // Desenha botões do menu
-    SDL_SetRenderDrawColor(renderer, 52,52,59, 255);
+    SDL_SetRenderDrawColor(renderer, 52, 52, 59, 255);
     SDL_RenderFillRect(renderer, &(genNewMap->boddy));
 
     SDL_RenderFillRect(renderer, &(exit->boddy));
@@ -338,7 +338,7 @@ int main(int argc, char** argv) {
         if (event.type == SDL_QUIT) {
             break;
         }
-        if(event.type == SDL_MOUSEBUTTONDOWN) {/*
+        if(event.type == SDL_MOUSEBUTTONDOWN) {
             if(isPressed(genNewMap->boddy, event)) {
 
                 clearDisplay(renderer);
@@ -356,7 +356,31 @@ int main(int argc, char** argv) {
 
                 SDL_RenderFillRect(renderer, &(zoomOut->boddy));
 
-            }*/
+                // Limpa o grid
+                cleanCellGrid(grid);
+
+                // Cria novas células para o grid
+                if(fillCellGrid(grid) == 1) {
+                    fprintf(stderr, "Erro ao preencher grid");
+                    break;
+                };
+
+                // Variáveis de display
+                blockDim.x = 14*grid->dim.x*zoom;
+                blockDim.y = 14*grid->dim.y*zoom;
+                firstPosition = centeringBlock(blockDim, displayDim);
+
+                //WFC em ação
+                while(1) {
+
+                    orderedPair collapsedCellPos = WFC_Cycle(grid, displayDim, zoom);
+                    if(collapsedCellPos.x == -1) break;
+
+                    cell *collapsedCell = grid->cellMatrix[collapsedCellPos.x][collapsedCellPos.y];
+                    printTexture(collapsedCell->tl->tex, renderer, firstPosition, zoom, collapsedCellPos);
+                }
+
+            }
             if(isPressed(exit->boddy, event)) {
                 break;
             }/*
@@ -420,15 +444,20 @@ int main(int argc, char** argv) {
         }
     }
 
-    //LIBERAÇÃO DE MEMÓRIA ALOCADA
+    // LIBERAÇÃO DE MEMÓRIA ALOCADA
 
-    //WFC
+    // WFC
     freeCellGrid(grid);
 
     for(int c = 0; c < 10; c++) {
         freeTile(matrixTile[c]);
     }
     free(matrixTile);
+
+    // SDL
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 
     printf("Fim de programa!");
     return 0;

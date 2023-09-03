@@ -74,6 +74,25 @@ void freeCell(cell *n) {
     free(n);
 }
 
+int fillCellGrid(cellGrid* grid) {
+
+    if(!grid) return -1;
+
+    orderedPair dim = grid->dim;
+
+    // Cria células e as adiciona no grid
+    for(int c = 0; c < dim.x; c++) {
+        for(int i = 0; i < dim.y; i++) {
+
+            grid->cellMatrix[c][i] = createCell();
+
+            if(!grid->cellMatrix[c][i]) return 1;
+        }
+    }
+
+    return 0;
+}
+
 cellGrid *createCellGrid(tile **tileList, orderedPair dim) {
 
     if(!tileList) return NULL;
@@ -110,16 +129,10 @@ cellGrid *createCellGrid(tile **tileList, orderedPair dim) {
     }
 
     // Cria células e as adiciona no grid
-    for(c = 0; c < dim.x; c++) {
-        for(i = 0; i < dim.y; i++) {
-
-            cellMatrix[c][i] = createCell();
-
-            if(!cellMatrix[c][i]) {
-                freeCellGrid(grid);
-                return NULL;
-            }
-        }
+    int isFilled = fillCellGrid(grid);
+    if(isFilled == 1) {
+        freeCellGrid(grid);
+        grid = NULL;
     }
 
     return grid;

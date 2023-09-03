@@ -64,6 +64,9 @@ cell *createCell();
 // Libera memória alocada para uma struct cell
 void freeCell(cell *n);
 
+// Preenche um grid com células
+int fillCellGrid(cellGrid* grid);
+
 // Construtor do grid de células
 cellGrid *createCellGrid(tile **tileList, orderedPair dim);
 

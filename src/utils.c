@@ -1,4 +1,4 @@
-#include "headers/utils.h"
+#include "../include/utils.h"
 
 int binSrch(int list[], int min, int max, int tg) {
     

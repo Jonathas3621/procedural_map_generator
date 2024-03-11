@@ -3,11 +3,15 @@
     #include <stdlib.h>
 #endif
 
+#ifndef SDL_MAIN_HANDLED
+#define SDL_MAIN_HANDLED
+#endif
+
 #ifndef SDL_GENERAL
 #define SDL_GENERAL
 
-    #include <SDL.h>
-    #include <SDL_image.h>
+    #include <SDL2/SDL.h>
+    #include <SDL2/SDL_image.h>
 
 #endif
 
@@ -21,7 +25,7 @@
     #include "utils.h"
 #endif
 
-#include <SDL_video.h>
+#include <SDL2/SDL_video.h>
 
 #define IMAGE_SIZE 14
 

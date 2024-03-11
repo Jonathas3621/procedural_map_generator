@@ -1,7 +1,7 @@
-#include "headers/GUI.h"
-#include "headers/waveFunctionColapse.h"
+#include "../include/GUI.h"
+#include "../include/waveFunctionColapse.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
 
     //Tamanho de tela padrão
     orderedPair windowDim = {600, 1000};
@@ -222,17 +222,17 @@ int main(int argc, char** argv) {
     insertAtHead(&leftCornerBottom2, createNewNode(58));
 
     // Paths para imagens
-    char tile01[] = "tiles/1.png";
-    char tile38[] = "tiles/38.png";
-    char tile39[] = "tiles/39.png";
-    char tile40[] = "tiles/40.png";
-    char tile47[] = "tiles/47.png";
-    char tile48[] = "tiles/48.png";
-    char tile49[] = "tiles/49.png";
-    char tile56[] = "tiles/56.png";
-    char tile57[] = "tiles/57.png";
-    char tile58[] = "tiles/58.png";
-    char tile65[] = "tiles/65.png";
+    char tile01[] = "../assets/1.png";
+    char tile38[] = "../assets/38.png";
+    char tile39[] = "../assets/39.png";
+    char tile40[] = "../assets/40.png";
+    char tile47[] = "../assets/47.png";
+    char tile48[] = "../assets/48.png";
+    char tile49[] = "../assets/49.png";
+    char tile56[] = "../assets/56.png";
+    char tile57[] = "../assets/57.png";
+    char tile58[] = "../assets/58.png";
+    char tile65[] = "../assets/65.png";
 
     /*
     38 39 40

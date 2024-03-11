@@ -1,4 +1,4 @@
-#include "headers/LinkedList.h"
+#include "../include/LinkedList.h"
 
 Node *createNewNode(int value){
     

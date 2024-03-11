@@ -1,4 +1,4 @@
-#include "headers/GUI.h"
+#include "../include/GUI.h"
 
 button* createButton(int x, int y, int w, int h, char *label, SDL_Texture *texture) {
     

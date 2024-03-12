@@ -256,6 +256,13 @@ int main(int argc, char* argv[]) {
     matrixTile[9] = createTile(58, bottomCornerRight1, rightCornerBottom1, leafAndTop3, leafAndLeft3, tile58, renderer);
     matrixTile[10] = createTile(65, bottomMid2, rightMid2, topCornerRight2, leftCornerBottom2, tile65, renderer);
 
+    for(int i = 0; i < 11; i++) {
+        if(!matrixTile[i]) {
+            fprintf(stderr, "Matriz de tiles incompleta");
+            return 1;
+        }
+    }
+
     // WFC configuração
     orderedPair dim = {10, 10};
     cellGrid *grid = createCellGrid(matrixTile, dim);

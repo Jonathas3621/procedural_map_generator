@@ -18,7 +18,7 @@ tile *createTile(int id, Node *t, Node *l, Node *b, Node *r, char *imgPath, SDL_
 
     SDL_FreeSurface(surface);
 
-    tile *temp = malloc(sizeof(tile));
+    tile *temp = (tile*) malloc(sizeof(tile));
     if(!temp) {
         fprintf(stderr, "Erro ao criar tile %d", id);
         return NULL;
@@ -46,7 +46,7 @@ void freeTile(tile *t) {
 
 cell *createCell() {
 
-    cell *n = malloc(sizeof(cell));
+    cell *n = (cell*) malloc(sizeof(cell));
     if(!n) return NULL;
 
     n->possibilities = createNewNode(1);
@@ -67,11 +67,10 @@ cell *createCell() {
     return n;
 }
 
-void freeCell(cell *n) {
-    if(!n) return;
-    //freeTile(n->tl);
-    clearList(&(n->possibilities));
-    free(n);
+void freeCell(cell *c) {
+    if(!c) return;
+    clearList(&(c->possibilities));
+    free(c);
 }
 
 int fillCellGrid(cellGrid* grid) {
@@ -99,17 +98,17 @@ cellGrid *createCellGrid(tile **tileList, orderedPair dim) {
 
     int c, i;
     // Aloca memória para um grid de células
-    cellGrid *grid = malloc(sizeof(cellGrid));
+    cellGrid *grid = (cellGrid*) malloc(sizeof(cellGrid));
     if(!grid) return NULL;
 
     // Aloca memória para uma matriz de células
-    cell*** cellMatrix = malloc(dim.x*sizeof(cell*));
+    cell*** cellMatrix = (cell***) malloc(dim.x*sizeof(cell*));
     if(!cellMatrix) return NULL;
 
     for(c = 0; c < dim.x; c++) {
         cellMatrix[c] = malloc(dim.y*sizeof(cell*));
 
-        if(!cellMatrix) {
+        if(!cellMatrix[c]) {
             for(i = 0; i < c; i++) free(cellMatrix[i]);
             free(cellMatrix);
             return NULL;
@@ -158,13 +157,16 @@ void freeCellGrid(cellGrid *grid) {
     if(!grid) return;
 
     cleanCellGrid(grid);
-    orderedPair dim = grid->dim;
-    cell ***cellMatrix = grid->cellMatrix;
+    if(grid->cellMatrix) {
+        orderedPair dim = grid->dim;
+        cell ***cellMatrix = grid->cellMatrix;
 
-    for(int c = 0; c < dim.x; c++) {
-        if(cellMatrix) free(cellMatrix[c]);
+        for(int c = 0; c < dim.x; c++) {
+            if(cellMatrix[c]) free(cellMatrix[c]);
+        }
+        free(cellMatrix);
     }
-    free(cellMatrix);
+    free(grid);
 }
 
 void updateEntropy(cellGrid *grid, orderedPair pos) {
@@ -172,75 +174,65 @@ void updateEntropy(cellGrid *grid, orderedPair pos) {
     int w = grid->dim.y, h = grid->dim.x;
     int x = pos.x, y = pos.y;
     cell ***cellMatrix = grid->cellMatrix;
+    tile *currentTile = cellMatrix[x][y]->tl;
+    Node *temp = NULL;
 
-    // Confere cell de cima
+    // Atualiza as possibilidades da cell de cima
     if(x > 0 && !cellMatrix[x-1][y]->tl) {
-        Node *cl = (cellMatrix[x-1][y])->possibilities;
-        Node *temp = NULL;
+        Node *topPossibilities = (cellMatrix[x-1][y])->possibilities;
         
-        while(cl != NULL) {
-            if(!searchNode((cellMatrix[x][y])->tl->t, cl->value)) {
-                temp = cl;
-                cl = cl->next;
+        while(topPossibilities != NULL) {
+            temp = topPossibilities;
+            topPossibilities = topPossibilities->next;
+
+            if(!searchNode(currentTile->t, temp->value)) {
                 delNode(&((cellMatrix[x-1][y])->possibilities), temp);
                 (cellMatrix[x-1][y])->entropy --;
             }
-            else {
-                cl = cl->next;
-            }
         }
     }
 
-    // Confere cell da esquerda
+    // Atualiza as possibilidades da cell da esquerda
     if(y > 0 && !cellMatrix[x][y-1]->tl) {
-        Node *cl = (cellMatrix[x][y-1])->possibilities;
-        Node *temp = NULL;
+        Node *leftPossibilities = (cellMatrix[x][y-1])->possibilities;
+        
+        while(leftPossibilities != NULL) {
+            temp = leftPossibilities;
+            leftPossibilities = leftPossibilities->next;
 
-        while(cl != NULL) {
-            if(!searchNode((cellMatrix[x][y])->tl->l, cl->value)) {
-                temp = cl;
-                cl = cl->next;
+            if(!searchNode(currentTile->l, temp->value)) {
                 delNode(&((cellMatrix[x][y-1])->possibilities), temp);
                 (cellMatrix[x][y-1])->entropy --;
             }
-            else {
-                cl = cl->next;
-            }
         }
     }
 
-    // Confere cell de baixo
+    // Atualiza as possibilidades da cell de baixo
     if(x<(h-1) && !cellMatrix[x+1][y]->tl) {
-        Node *cl = (cellMatrix[x+1][y])->possibilities;
-        Node *temp = NULL;
+        Node *bottomPossibilities = (cellMatrix[x+1][y])->possibilities;
 
-        while(cl != NULL) {
-            if(!searchNode((cellMatrix[x][y])->tl->b, cl->value)) {
-                temp = cl;
-                cl = cl->next;
+        while(bottomPossibilities != NULL) {
+            temp = bottomPossibilities;
+            bottomPossibilities = bottomPossibilities->next;
+
+            if(!searchNode(currentTile->b, temp->value)) {
                 delNode(&((cellMatrix[x+1][y])->possibilities), temp);
                 (cellMatrix[x+1][y])->entropy --;
             }
-            else {
-                cl = cl->next;
-            }
         }
     }
 
-    // Confere cell da direita
+    // Atualiza as possibilidades da cell da direita
     if(y<(w-1) && !cellMatrix[x][y+1]->tl) {
-        Node *cl = (cellMatrix[x][y+1])->possibilities;
-        Node *temp = NULL;
+        Node *rightPossibilities = (cellMatrix[x][y+1])->possibilities;
 
-        while(cl != NULL) {
-            if(!searchNode((cellMatrix[x][y])->tl->r, cl->value)) {
-                temp = cl;
-                cl = cl->next;
+        while(rightPossibilities != NULL) {
+            temp = rightPossibilities;
+            rightPossibilities = rightPossibilities->next;
+
+            if(!searchNode(currentTile->r, temp->value)) {
                 delNode(&((cellMatrix[x][y+1])->possibilities), temp);
                 (cellMatrix[x][y+1])->entropy --;
-            }
-            else {
-                cl = cl->next;
             }
         }
     }
@@ -251,7 +243,7 @@ orderedPair findLowestEntropy(cellGrid *grid) {
     // Retorno para caso de erro
     orderedPair error = {-1,-1};
 
-    // A função termina em caso de argumentos inválidos
+    // A função termina em caso de argumento inválido
     if(!grid) return error;
 
     // Variáveis de grid
@@ -280,6 +272,8 @@ orderedPair findLowestEntropy(cellGrid *grid) {
 }
 
 tile* findTileById(tile **matrixTile, int id) {
+    if(!matrixTile) return NULL;
+
     for(int i = 0; i < 11; i++) {
         if(matrixTile[i]->id == id) return matrixTile[i];
     }
@@ -328,15 +322,12 @@ orderedPair WFC_Cycle(cellGrid *grid, orderedPair displayDim, int zoom) {
     orderedPair lowEntPosition = findLowestEntropy(grid);
     if(lowEntPosition.x == -1) return error;
 
-    cell* cel = cellMatrix[lowEntPosition.x][lowEntPosition.y];
-
     printf("Encontrou menor entropia x: %d, y: %d\n", lowEntPosition.x, lowEntPosition.y);
 
     // Colapso da célula selecionada
     if(collapseCell(grid, lowEntPosition)) return error;
 
     // Propagação da informação
-    Node* til = cel->possibilities;
     updateEntropy(grid, lowEntPosition);
 
     return lowEntPosition;

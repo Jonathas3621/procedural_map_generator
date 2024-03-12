@@ -3,7 +3,7 @@
 button* createButton(int x, int y, int w, int h, char *label, SDL_Texture *texture) {
     
     button* btn;
-    btn = malloc(sizeof(button));
+    btn = (button*) malloc(sizeof(button));
     if(!btn) {
         fprintf(stderr, "Erro ao criar botão");
         return NULL;
@@ -12,33 +12,33 @@ button* createButton(int x, int y, int w, int h, char *label, SDL_Texture *textu
     SDL_Rect rect = {x, y, w, h};
     btn->boddy = rect;
 
-    if(texture) btn->texture = texture;
+    btn->texture = texture;
     if(label) btn->label = label;
 
     return btn;
 }
 
 void freeButton(button *btn) {
-
     if(btn) free(btn);
 }
 
 int isPressed(SDL_Rect item, SDL_Event event) {
     int mouseX = event.button.x;
     int mouseY = event.button.y;
+    int pressed = 0;
 
     if(mouseX > item.x && mouseX < (item.x + item.w) &&
         mouseY > item.y && mouseY < (item.y + item.h))
     {
-        return 1;
+        pressed = 1;
     }
 
-    return 0;
+    return pressed;
 }
 
 void freeSdlDisplay(SDL_Window *window, SDL_Renderer *renderer){
-    if(window) SDL_DestroyWindow(window);
     if(renderer) SDL_DestroyRenderer(renderer);
+    if(window) SDL_DestroyWindow(window);
 }
 
 void freeSdlContentMatrix(SDL_Surface ***image_matrix, SDL_Texture ***texture_matrix, orderedPair tilesMatrixDim) {

@@ -1,5 +1,5 @@
 #include "../include/GUI.h"
-#include "../include/waveFunctionColapse.h"
+#include "../include/WFC.h"
 
 int main(int argc, char* argv[]) {
 

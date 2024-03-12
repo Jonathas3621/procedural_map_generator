@@ -1,4 +1,4 @@
-#include "../include/waveFunctionColapse.h"
+#include "../include/WFC.h"
 
 tile *createTile(int id, Node *t, Node *l, Node *b, Node *r, char *imgPath, SDL_Renderer *renderer) {
     

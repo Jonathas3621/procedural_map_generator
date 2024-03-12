@@ -462,8 +462,7 @@ int main(int argc, char* argv[]) {
     free(matrixTile);
 
     // SDL
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    freeSdlDisplay(window, renderer);
     SDL_Quit();
 
     printf("Fim de programa!");

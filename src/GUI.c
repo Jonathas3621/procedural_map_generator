@@ -41,22 +41,6 @@ void freeSdlDisplay(SDL_Window *window, SDL_Renderer *renderer){
     if(window) SDL_DestroyWindow(window);
 }
 
-int loadTextures(SDL_Renderer *renderer, SDL_Surface ***image_matrix, SDL_Texture ***texture_matrix, orderedPair tilesMatrixDim) {
-    for(int i = 0; i < tilesMatrixDim.y; i++) {
-        for(int j = 0; j < tilesMatrixDim.x; j++) {
-            texture_matrix[i][j] = SDL_CreateTextureFromSurface(renderer, image_matrix[i][j]);
-
-            if(!texture_matrix[i][j]) {
-                orderedPair pair = {i,j};
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Falha ao carregar textura: %s", SDL_GetError());
-                freeSdlContentMatrix(image_matrix, texture_matrix, pair);
-                return -1;
-            }
-        }
-    }
-    return 0;
-}
-
 void drawMenu(SDL_Renderer* renderer, button* btn, SDL_Rect* menuBar) {
     // Desenhar barra de menu
     SDL_SetRenderDrawColor(renderer, 38,38,46, 255);
@@ -99,10 +83,10 @@ orderedPair centeringBlock(orderedPair dim, orderedPair displayArea) {
     return firstPosition;
 }
 
-int printTexture(SDL_Texture *texture, SDL_Renderer *renderer, orderedPair firstPosition, int zoom, orderedPair position) {
+int printTexture(SDL_Texture *texture, SDL_Renderer *renderer, orderedPair firstPosition, float zoom, orderedPair position) {
 
     if(!texture) return 1;
-    int scale = 14 * zoom;
+    int scale = (int) 14 * zoom;
 
     SDL_Rect dstRect = {firstPosition.y + scale * position.y, firstPosition.x + scale * position.x, IMAGE_SIZE*zoom, IMAGE_SIZE*zoom};
 

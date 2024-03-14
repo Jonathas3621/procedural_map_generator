@@ -48,9 +48,6 @@ int isPressed(SDL_Rect item, SDL_Event event);
 // Libera a memória alocada para janelas (SDL_Window) e renderizadores (SDL_Renderer)
 void freeSdlDisplay(SDL_Window *window, SDL_Renderer *renderer);
 
-// Cria uma matriz de texturas a partir de uma matriz de superfícies
-int loadTextures(SDL_Renderer *renderer, SDL_Surface ***image_matrix, SDL_Texture ***texture_matrix, orderedPair tilesMatrixDim);
-
 // Desenha o menu na tela
 void drawMenu(SDL_Renderer* renderer, button* btn, SDL_Rect* menuBar);
 
@@ -62,4 +59,4 @@ void imageScreenAdjustment(int *zoom, orderedPair tilesMatrixSize, orderedPair s
 
 orderedPair centeringBlock(orderedPair dim, orderedPair displayArea);
 
-int printTexture(SDL_Texture *texture, SDL_Renderer *renderer, orderedPair firstPosition, int zoom, orderedPair position);
+int printTexture(SDL_Texture *texture, SDL_Renderer *renderer, orderedPair firstPosition, float zoom, orderedPair position);

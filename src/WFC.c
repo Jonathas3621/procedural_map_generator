@@ -169,6 +169,33 @@ void freeCellGrid(cellGrid *grid) {
     free(grid);
 }
 
+Node *takeParametersList(int tileNumber, char *param) {
+    json_t *json;
+    json_error_t error;
+
+    char numString[10];
+    sprintf(numString, "%d", tileNumber);
+
+    char filePath[50];
+    strcpy(filePath, ASSETS_FOLDER);
+
+    strcat(filePath, PARAMETERS_FILE);
+
+    json = json_load_file(filePath, 0, &error);
+    if(!json) {
+        printf("Não foi possível abrir o json: %s", filePath);
+        return NULL;
+    }
+
+    json_t *allTiles = json_object_get(json, "tiles");
+    json_t *tile = json_object_get(allTiles, numString);
+    json_t *paramArray = json_object_get(tile, param);
+
+    Node *paramList = jsonArrayToLinkedList(paramArray);
+
+    return paramList;
+}
+
 void updateEntropy(cellGrid *grid, orderedPair pos) {
     int c;
     int w = grid->dim.y, h = grid->dim.x;

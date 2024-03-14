@@ -1,6 +1,11 @@
 #include "../include/GUI.h"
 #include "../include/WFC.h"
 
+#ifndef JSON
+#define JSON
+    #include "jsonHandler.h"
+#endif
+
 int main(int argc, char* argv[]) {
 
     //Tamanho de tela padrão
@@ -14,7 +19,7 @@ int main(int argc, char* argv[]) {
 
     // variáveis gerais (Valores padrão)
     orderedPair pos = {0, 0};
-    int zoom = 3;
+    float zoom;
 
     // SDL
 
@@ -222,17 +227,17 @@ int main(int argc, char* argv[]) {
     insertAtHead(&leftCornerBottom2, createNewNode(58));
 
     // Paths para imagens
-    char tile01[] = "../assets/1.png";
-    char tile38[] = "../assets/38.png";
-    char tile39[] = "../assets/39.png";
-    char tile40[] = "../assets/40.png";
-    char tile47[] = "../assets/47.png";
-    char tile48[] = "../assets/48.png";
-    char tile49[] = "../assets/49.png";
-    char tile56[] = "../assets/56.png";
-    char tile57[] = "../assets/57.png";
-    char tile58[] = "../assets/58.png";
-    char tile65[] = "../assets/65.png";
+    char tile01[] = "../assets/tiles/1.png";
+    char tile38[] = "../assets/tiles/38.png";
+    char tile39[] = "../assets/tiles/39.png";
+    char tile40[] = "../assets/tiles/40.png";
+    char tile47[] = "../assets/tiles/47.png";
+    char tile48[] = "../assets/tiles/48.png";
+    char tile49[] = "../assets/tiles/49.png";
+    char tile56[] = "../assets/tiles/56.png";
+    char tile57[] = "../assets/tiles/57.png";
+    char tile58[] = "../assets/tiles/58.png";
+    char tile65[] = "../assets/tiles/65.png";
 
     /*
     38 39 40
@@ -290,9 +295,9 @@ int main(int argc, char* argv[]) {
     SDL_RenderPresent(renderer);
     
     // Variáveis de display
-    orderedPair blockDim = {14*grid->dim.x*zoom, 14*grid->dim.y*zoom};
+    zoom = 1.4;
+    orderedPair blockDim = {((int) 14*zoom) * grid->dim.x, ((int) 14*zoom) *grid->dim.y};
     orderedPair firstPosition = centeringBlock(blockDim, displayDim);
-
     //WFC em ação
     while(1) {
 
@@ -373,8 +378,8 @@ int main(int argc, char* argv[]) {
                 };
 
                 // Variáveis de display
-                blockDim.x = 14*grid->dim.x*zoom;
-                blockDim.y = 14*grid->dim.y*zoom;
+                blockDim.x = ((int) 14*zoom) * grid->dim.x;
+                blockDim.y = ((int) 14*zoom) *grid->dim.y;
                 firstPosition = centeringBlock(blockDim, displayDim);
 
                 //WFC em ação
@@ -466,5 +471,8 @@ int main(int argc, char* argv[]) {
     SDL_Quit();
 
     printf("Fim de programa!");
+    printf("Existem %d tiles.\n", countFiles(TILES_FOLDER));
+    Node *list = takeParametersList(1, "t");
+    printList(list);
     return 0;
 }

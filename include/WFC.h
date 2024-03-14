@@ -25,9 +25,19 @@
     #include "utils.h"
 #endif
 
-#include "LinkedList.h"
+#ifndef LINKED_LIST
+#define LINKED_LIST
+    #include "LinkedList.h"
+#endif
 
-#define NUM_TILES 10
+#ifndef JSON
+#define JSON
+    #include "jsonHandler.h"
+#endif
+
+#define TILES_FOLDER "..\\assets\\tiles\\"
+#define ASSETS_FOLDER "../assets/"
+#define PARAMETERS_FILE "tilesParameters.json"
 
 // Estrutura que representa um tile. Tem como campos uma textura de tile, seu id
 // e listas para todos os tiles aceitos para cada lado
@@ -79,6 +89,9 @@ void cleanCellGrid(cellGrid *grid);
 
 // Libera a memória que foi alocada para uma struct cellGrid
 void freeCellGrid(cellGrid *grid);
+
+// Pega, no arquivo assets/tilesParameters.json, os parâmetros de um tile
+Node *takeParametersList(int tileNumber, char *param);
 
 // Quando o algoritmo adiciona um novo tile à matriz, a função atualiza 
 // os tiles possíveis (entropia) nos cells ao redor

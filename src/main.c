@@ -261,6 +261,21 @@ int main(int argc, char* argv[]) {
     matrixTile[9] = createTile(58, bottomCornerRight1, rightCornerBottom1, leafAndTop3, leafAndLeft3, tile58, renderer);
     matrixTile[10] = createTile(65, bottomMid2, rightMid2, topCornerRight2, leftCornerBottom2, tile65, renderer);
 
+/*  char filePath[50];
+    strcpy(filePath, TILES_FOLDER);
+
+    json_array_foreach(json, index, value) {
+        int int_v = (int) json_number_value(value);
+
+        if(!index) list = createNewNode(int_v);
+        else insertAtHead(&list, createNewNode(int_v));
+    }
+
+    char tileFileName[10];
+    sprintf(tileFileName, "%d.png", index);
+
+    strcat(filePath, tileFileName);
+*/
     for(int i = 0; i < 11; i++) {
         if(!matrixTile[i]) {
             fprintf(stderr, "Matriz de tiles incompleta");
@@ -470,9 +485,20 @@ int main(int argc, char* argv[]) {
     freeSdlDisplay(window, renderer);
     SDL_Quit();
 
+    json_t *json;
+    json_error_t error;
+
+    char filePath[50];
+    strcpy(filePath, PARAMETERS_FILE);
+
+    json = json_load_file(filePath, 0, &error);
+    if(!json) {
+        printf("Não foi possível abrir o json: %s", filePath);
+        return 1;
+    }
+
+    json_t *allTiles = json_object_get(json, "tiles");
+    getKeys(allTiles);
     printf("Fim de programa!");
-    printf("Existem %d tiles.\n", countFiles(TILES_FOLDER));
-    Node *list = takeParametersList(1, "t");
-    printList(list);
     return 0;
 }

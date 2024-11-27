@@ -45,3 +45,16 @@ Node *jsonArrayToLinkedList(json_t *json) {
 
     return list;
 }
+
+void getKeys(json_t *json) {
+    size_t index;
+    json_t *value;
+    int count = 0;
+    char **keyList;
+
+    json_array_foreach(json, index, value) {
+        count++;
+    }
+
+    printf("count: %d\n", count);
+}

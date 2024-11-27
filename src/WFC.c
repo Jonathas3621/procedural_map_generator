@@ -1,5 +1,31 @@
 #include "../include/WFC.h"
 
+Node *takeParametersList(int tileNumber, char *param) {
+    json_t *json;
+    json_error_t error;
+
+    char numString[10];
+    sprintf(numString, "%d", tileNumber);
+
+    char filePath[50];
+    strcpy(filePath, PARAMETERS_FILE);
+
+    json = json_load_file(filePath, 0, &error);
+    if(!json) {
+        printf("Não foi possível abrir o json: %s", filePath);
+        return NULL;
+    }
+
+    json_t *allTiles = json_object_get(json, "tiles");
+    json_t *tile = json_object_get(allTiles, numString);
+    json_t *paramArray = json_object_get(tile, param);
+
+    Node *paramList = jsonArrayToLinkedList(paramArray);
+
+    return paramList;
+}
+
+//Node *t, Node *l, Node *b, Node *r, 
 tile *createTile(int id, Node *t, Node *l, Node *b, Node *r, char *imgPath, SDL_Renderer *renderer) {
     
     SDL_Surface *surface = IMG_Load(imgPath);
@@ -25,10 +51,10 @@ tile *createTile(int id, Node *t, Node *l, Node *b, Node *r, char *imgPath, SDL_
     }
 
     temp->id = id;
-    temp->t = t;
-    temp->l = l;
-    temp->b = b;
-    temp->r = r;
+    temp->t = t;//takeParametersList(id, "t");
+    temp->l = l;//takeParametersList(id, "l");
+    temp->b = b;//takeParametersList(id, "b");
+    temp->r = r;//takeParametersList(id, "r");
     temp->tex = texture;
 
     return temp;
@@ -167,33 +193,6 @@ void freeCellGrid(cellGrid *grid) {
         free(cellMatrix);
     }
     free(grid);
-}
-
-Node *takeParametersList(int tileNumber, char *param) {
-    json_t *json;
-    json_error_t error;
-
-    char numString[10];
-    sprintf(numString, "%d", tileNumber);
-
-    char filePath[50];
-    strcpy(filePath, ASSETS_FOLDER);
-
-    strcat(filePath, PARAMETERS_FILE);
-
-    json = json_load_file(filePath, 0, &error);
-    if(!json) {
-        printf("Não foi possível abrir o json: %s", filePath);
-        return NULL;
-    }
-
-    json_t *allTiles = json_object_get(json, "tiles");
-    json_t *tile = json_object_get(allTiles, numString);
-    json_t *paramArray = json_object_get(tile, param);
-
-    Node *paramList = jsonArrayToLinkedList(paramArray);
-
-    return paramList;
 }
 
 void updateEntropy(cellGrid *grid, orderedPair pos) {

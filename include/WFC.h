@@ -36,8 +36,8 @@
 #endif
 
 #define TILES_FOLDER "..\\assets\\tiles\\"
-#define ASSETS_FOLDER "../assets/"
-#define PARAMETERS_FILE "tilesParameters.json"
+#define ASSETS_FOLDER "..\\assets\\"
+#define PARAMETERS_FILE "..\\assets\\tilesParameters.json"
 
 // Estrutura que representa um tile. Tem como campos uma textura de tile, seu id
 // e listas para todos os tiles aceitos para cada lado
@@ -66,6 +66,9 @@ typedef struct cellGrid{
     tile **tileList;
 }cellGrid;
 
+// Pega, no arquivo assets/tilesParameters.json, os parâmetros de um tile
+Node *takeParametersList(int tileNumber, char *param);
+
 // Construtor para a struct tile
 tile *createTile(int id, Node *t, Node *l, Node *b, Node *r, char *imgPath, SDL_Renderer *renderer);
 
@@ -89,9 +92,6 @@ void cleanCellGrid(cellGrid *grid);
 
 // Libera a memória que foi alocada para uma struct cellGrid
 void freeCellGrid(cellGrid *grid);
-
-// Pega, no arquivo assets/tilesParameters.json, os parâmetros de um tile
-Node *takeParametersList(int tileNumber, char *param);
 
 // Quando o algoritmo adiciona um novo tile à matriz, a função atualiza 
 // os tiles possíveis (entropia) nos cells ao redor

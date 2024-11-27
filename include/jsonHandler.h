@@ -21,3 +21,5 @@ int countFiles(char *dir);
 
 // Cria uma LinkedList a partir de um JSON array
 Node *jsonArrayToLinkedList(json_t *json);
+
+void getKeys(json_t *json);
